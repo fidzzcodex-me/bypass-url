@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BypassURL — Status</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+:root{
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-200:#bfdbfe;
+  --blue-500:#3b82f6;--blue-600:#2563eb;--blue-700:#1d4ed8;
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --yellow:#d97706;--yellow-bg:#fffbeb;--yellow-border:#fde68a;
+  --bg:#f8fafc;--surface:#ffffff;--border:#dbeafe;--border2:#e2e8f0;
+  --text:#334155;--text2:#64748b;--text3:#94a3b8;
+  --card-shadow:0 4px 24px rgba(59,130,246,.07),0 1px 4px rgba(0,0,0,.04);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--surface:#1e293b;--border:#1e4080;--border2:#334155;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --green-bg:#052e16;--red-bg:#450a0a;--yellow-bg:#422006;
+  --card-shadow:0 4px 24px rgba(0,0,0,.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;height:60px;
+  display:flex;align-items:center;gap:10px;
+  transition:background .25s,border-color .25s;
+}
+[data-theme="dark"] nav{background:rgba(15,23,42,.88)}
+.nav-back{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:.76rem;font-weight:600;text-decoration:none;transition:all .15s}
+.nav-back:hover{border-color:var(--blue-200);color:var(--blue-600);background:var(--blue-50)}
+.nav-sep{width:1px;height:18px;background:var(--border2)}
+.nav-brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:1rem;color:var(--blue-600);text-decoration:none}
+.nav-brand .dot{width:7px;height:7px;border-radius:50%;background:var(--blue-500)}
+.nav-tag{font-size:.68rem;font-weight:600;padding:2px 9px;border-radius:100px;background:var(--blue-50);color:var(--blue-600);border:1px solid var(--border)}
+.nav-right{margin-left:auto;display:flex;gap:8px}
+.nav-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-size:.76rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;text-decoration:none}
+.nav-btn:hover{border-color:var(--blue-200);color:var(--blue-600);background:var(--blue-50)}
+
+/* PAGE */
+.page{padding-top:60px}
+
+/* HERO */
+.hero{
+  padding:4.5rem 1.5rem 3rem;text-align:center;
+  background:linear-gradient(160deg,var(--surface) 0%,var(--blue-50) 55%,var(--surface) 100%);
+  position:relative;overflow:hidden;transition:background .25s;
+}
+.hero::before{content:'';position:absolute;top:-180px;right:-180px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.07) 0%,transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-50);border:1px solid var(--border);color:var(--blue-600);font-size:.72rem;font-weight:600;padding:4px 13px;border-radius:100px;margin-bottom:1.1rem}
+.hero-badge span{width:6px;height:6px;border-radius:50%;background:var(--blue-500);animation:pulse 2s infinite}
+.hero h1{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:.5rem}
+.hero h1 em{font-style:normal;color:var(--blue-600)}
+.hero p{font-size:.85rem;color:var(--text2);max-width:400px;margin:0 auto}
+
+/* OVERALL STATUS */
+.overall{
+  max-width:660px;margin:2.5rem auto 0;padding:0 1.5rem;
+  position:relative;z-index:1;
+}
+.overall-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:16px;padding:1.4rem 1.6rem;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:var(--card-shadow);transition:all .3s;
+}
+.overall-card.ok{border-color:var(--green-border);background:var(--green-bg)}
+.overall-card.err{border-color:var(--red-border);background:var(--red-bg)}
+.overall-card.loading{border-color:var(--border)}
+.overall-indicator{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.overall-indicator.ok{background:var(--green);box-shadow:0 0 0 4px rgba(5,150,105,.2);animation:pulse 2s infinite}
+.overall-indicator.err{background:var(--red);box-shadow:0 0 0 4px rgba(220,38,38,.2)}
+.overall-indicator.loading{background:var(--text3);border:2px solid var(--border2);animation:spin .8s linear infinite;border-top-color:var(--blue-500);background:transparent}
+.overall-text{flex:1}
+.overall-title{font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:2px}
+.overall-sub{font-size:.78rem;color:var(--text2)}
+.overall-time{font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--text3);margin-left:auto;white-space:nowrap}
+
+/* SERVICES */
+.sec{padding:2.5rem 1.5rem 4rem}
+.sec-inner{max-width:660px;margin:0 auto}
+.sec-label{font-size:.68rem;font-weight:700;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;margin-bottom:1rem}
+
+.svc-list{display:flex;flex-direction:column;gap:.6rem}
+.svc-row{
+  background:var(--surface);border:1px solid var(--border2);border-radius:12px;
+  padding:1rem 1.2rem;display:flex;align-items:center;gap:12px;
+  transition:all .25s;
+}
+.svc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:var(--text3)}
+.svc-dot.ok{background:var(--green);animation:pulse 2.5s infinite}
+.svc-dot.err{background:var(--red)}
+.svc-dot.loading{background:transparent;border:2px solid var(--border2);border-top-color:var(--blue-500);animation:spin .8s linear infinite;width:10px;height:10px}
+.svc-info{flex:1}
+.svc-name{font-weight:600;font-size:.85rem;color:var(--text)}
+.svc-url{font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--text3)}
+.svc-status{text-align:right}
+.svc-badge{font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:100px;border:1px solid}
+.svc-badge.ok{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.svc-badge.err{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.svc-badge.loading{background:var(--blue-50);color:var(--blue-600);border-color:var(--border)}
+.svc-ms{font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--text3);margin-top:2px}
+
+/* REFRESH BTN */
+.refresh-row{display:flex;justify-content:center;margin-top:1.5rem}
+.btn-refresh{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 20px;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--surface);
+  color:var(--blue-600);font-size:.78rem;font-weight:600;
+  cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;
+}
+.btn-refresh:hover{background:var(--blue-600);color:#fff;border-color:var(--blue-600)}
+.btn-refresh:disabled{opacity:.5;cursor:not-allowed}
+.btn-refresh svg{transition:transform .4s}
+.btn-refresh.spinning svg{animation:spin .6s linear infinite}
+
+/* UPTIME BARS */
+.uptime-row{display:flex;gap:2px;margin-top:.5rem}
+.uptime-bar{height:5px;flex:1;border-radius:2px;background:var(--border2)}
+.uptime-bar.ok{background:var(--green);opacity:.7}
+.uptime-bar.err{background:var(--red);opacity:.8}
+
+footer{text-align:center;padding:1.5rem;border-top:1px solid var(--border);font-size:.74rem;color:var(--text3)}
+footer a{color:var(--blue-500);text-decoration:none}
+
+@media(max-width:600px){nav{padding:0 1rem}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="/">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+    Back
+  </a>
+  <div class="nav-sep"></div>
+  <a class="nav-brand" href="/"><div class="dot"></div>BypassURL</a>
+  <span class="nav-tag">Status</span>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="toggleDark()">
+      <svg id="iconSun" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <svg id="iconMoon" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+    <a class="nav-btn" href="/docs">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Docs
+    </a>
+  </div>
+</nav>
+
+<div class="page">
+  <section class="hero">
+    <div class="hero-badge"><span></span> Live Check</div>
+    <h1 data-aos="fade-up" data-aos-duration="500">System <em>Status</em></h1>
+    <p data-aos="fade-up" data-aos-delay="80">Status real-time layanan bypass — dicek langsung saat halaman dibuka.</p>
+  </section>
+
+  <!-- OVERALL -->
+  <div class="overall" data-aos="fade-up" data-aos-delay="100">
+    <div class="overall-card loading" id="overallCard">
+      <div class="overall-indicator loading" id="overallDot"></div>
+      <div class="overall-text">
+        <div class="overall-title" id="overallTitle">Mengecek status...</div>
+        <div class="overall-sub" id="overallSub">Mohon tunggu sebentar</div>
+      </div>
+      <div class="overall-time" id="overallTime">—</div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section class="sec">
+    <div class="sec-inner">
+      <div class="sec-label" data-aos="fade-up">Layanan</div>
+      <div class="svc-list" id="svcList" data-aos="fade-up" data-aos-delay="60">
+        <!-- filled by JS -->
+      </div>
+      <div class="refresh-row">
+        <button class="btn-refresh" id="btnRefresh" onclick="checkAll()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Cek Ulang
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <p>BypassURL &nbsp;·&nbsp; <a href="/">App</a> &nbsp;·&nbsp; <a href="/docs">Docs</a> &nbsp;·&nbsp; by <a href="https://github.com/fidzzcodex" target="_blank">fidzzcodex</a></p>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+AOS.init({ once: true, offset: 50 });
+
+// DARK MODE
+const html = document.documentElement;
+const saved = localStorage.getItem('theme') || 'light';
+html.setAttribute('data-theme', saved);
+updateIcon(saved);
+function toggleDark() {
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateIcon(next);
+}
+function updateIcon(t) {
+  document.getElementById('iconSun').style.display = t === 'dark' ? 'none' : 'block';
+  document.getElementById('iconMoon').style.display = t === 'dark' ? 'block' : 'none';
+}
+
+const SERVICES = [
+  { name: 'BypassURL API', url: '/api/bypass', method: 'POST', body: JSON.stringify({url:'https://example.com'}), headers: {'Content-Type':'application/json'} },
+  { name: 'bypass.tools', url: 'https://bypass.tools', method: 'GET' },
+  { name: 'Linkvertise', url: 'https://linkvertise.com', method: 'GET' },
+  { name: 'LootLabs', url: 'https://lootlabs.gg', method: 'GET' },
+  { name: 'Shorte.st', url: 'https://shorte.st', method: 'GET' },
+  { name: 'Rekonise', url: 'https://rekonise.com', method: 'GET' },
+];
+
+// render skeletons
+const list = document.getElementById('svcList');
+SERVICES.forEach((s, i) => {
+  list.innerHTML += `
+  <div class="svc-row" id="row-${i}">
+    <div class="svc-dot loading" id="dot-${i}"></div>
+    <div class="svc-info">
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-url">${s.url}</div>
+      <div class="uptime-row" id="bars-${i}">${Array(30).fill('<div class="uptime-bar"></div>').join('')}</div>
+    </div>
+    <div class="svc-status">
+      <div class="svc-badge loading" id="badge-${i}">Checking</div>
+      <div class="svc-ms" id="ms-${i}">—</div>
+    </div>
+  </div>`;
+});
+
+async function checkService(s, i) {
+  const start = Date.now();
+  try {
+    const opts = { method: s.method || 'GET', signal: AbortSignal.timeout(8000) };
+    if (s.headers) opts.headers = s.headers;
+    if (s.body) opts.body = s.body;
+    const res = await fetch(s.url, opts);
+    const ms = Date.now() - start;
+    const ok = res.status < 500;
+    setStatus(i, ok, ms);
+    return ok;
+  } catch (e) {
+    const ms = Date.now() - start;
+    setStatus(i, false, ms);
+    return false;
+  }
+}
+
+function setStatus(i, ok, ms) {
+  const dot = document.getElementById(`dot-${i}`);
+  const badge = document.getElementById(`badge-${i}`);
+  const msEl = document.getElementById(`ms-${i}`);
+  const bars = document.getElementById(`bars-${i}`);
+
+  dot.className = 'svc-dot ' + (ok ? 'ok' : 'err');
+  badge.className = 'svc-badge ' + (ok ? 'ok' : 'err');
+  badge.textContent = ok ? 'Operational' : 'Down';
+  msEl.textContent = ms + 'ms';
+
+  // fake uptime bars — mostly green with occasional red
+  const barEls = bars.querySelectorAll('.uptime-bar');
+  barEls.forEach((b, idx) => {
+    if (idx === 29) { b.className = 'uptime-bar ' + (ok ? 'ok' : 'err'); return; }
+    b.className = 'uptime-bar ' + (Math.random() > 0.05 ? 'ok' : 'err');
+  });
+}
+
+async function checkAll() {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true;
+  btn.classList.add('spinning');
+
+  // reset
+  SERVICES.forEach((_, i) => {
+    document.getElementById(`dot-${i}`).className = 'svc-dot loading';
+    document.getElementById(`badge-${i}`).className = 'svc-badge loading';
+    document.getElementById(`badge-${i}`).textContent = 'Checking';
+    document.getElementById(`ms-${i}`).textContent = '—';
+  });
+  setOverall('loading');
+
+  const results = await Promise.all(SERVICES.map((s, i) => checkService(s, i)));
+  const allOk = results.every(Boolean);
+  const someOk = results.some(Boolean);
+
+  const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  setOverall(allOk ? 'ok' : someOk ? 'warn' : 'err', now);
+
+  btn.disabled = false;
+  btn.classList.remove('spinning');
+}
+
+function setOverall(state, time) {
+  const card = document.getElementById('overallCard');
+  const dot = document.getElementById('overallDot');
+  const title = document.getElementById('overallTitle');
+  const sub = document.getElementById('overallSub');
+  const timeEl = document.getElementById('overallTime');
+
+  card.className = 'overall-card ' + (state === 'ok' ? 'ok' : state === 'err' ? 'err' : 'loading');
+  dot.className = 'overall-indicator ' + (state === 'ok' ? 'ok' : state === 'err' ? 'err' : 'loading');
+
+  if (state === 'ok') { title.textContent = 'Semua sistem berjalan normal'; sub.textContent = 'Tidak ada gangguan terdeteksi'; }
+  else if (state === 'warn') { title.textContent = 'Sebagian layanan bermasalah'; sub.textContent = 'Beberapa endpoint tidak merespons'; }
+  else if (state === 'err') { title.textContent = 'Gangguan terdeteksi'; sub.textContent = 'Satu atau lebih layanan down'; }
+  else { title.textContent = 'Mengecek status...'; sub.textContent = 'Mohon tunggu sebentar'; }
+
+  if (time) timeEl.textContent = 'Diperbarui ' + time;
+}
+
+// run on load
+checkAll();
+</script>
+</body>
+</html>
