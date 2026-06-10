@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BypassURL — Skip iklan, langsung ke konten</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+:root {
+  --blue-50:#eff6ff;--blue-100:#dbeafe;--blue-200:#bfdbfe;
+  --blue-500:#3b82f6;--blue-600:#2563eb;--blue-700:#1d4ed8;
+  --bg:#f8fafc;--surface:#ffffff;--border:#dbeafe;--border2:#e2e8f0;
+  --text:#334155;--text2:#64748b;--text3:#94a3b8;
+  --input-bg:#eff6ff;--card-shadow:0 4px 24px rgba(59,130,246,.07),0 1px 4px rgba(0,0,0,.04);
+}
+[data-theme="dark"] {
+  --blue-50:#1e3a5f;--blue-100:#1e3a5f;--blue-200:#1e4080;
+  --bg:#0f172a;--surface:#1e293b;--border:#1e4080;--border2:#334155;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --input-bg:#0f172a;--card-shadow:0 4px 24px rgba(0,0,0,.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .25s,color .25s}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(12px)}}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background .25s,border-color .25s;
+}
+[data-theme="dark"] nav{background:rgba(15,23,42,.88)}
+.nav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;color:var(--blue-600);text-decoration:none}
+.nav-brand .dot{width:7px;height:7px;border-radius:50%;background:var(--blue-500)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-links{display:flex;gap:1.25rem}
+.nav-links a{text-decoration:none;font-size:.83rem;font-weight:500;color:var(--text2);transition:color .15s}
+.nav-links a:hover{color:var(--blue-600)}
+
+.nav-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 13px;border-radius:8px;font-size:.76rem;font-weight:600;
+  border:1.5px solid var(--border2);background:var(--surface);
+  color:var(--text2);cursor:pointer;text-decoration:none;
+  transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.nav-btn:hover{border-color:var(--blue-200);color:var(--blue-600);background:var(--blue-50)}
+.nav-btn.docs{border-color:var(--border);color:var(--blue-600)}
+.nav-btn.docs:hover{background:var(--blue-600);color:#fff;border-color:var(--blue-600)}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:10px;font-size:.8rem;font-weight:600;
+  background:var(--slate-800,#1e293b);color:#f1f5f9;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+  animation:slideUp .25s ease;pointer-events:auto;
+  max-width:280px;
+}
+.toast.out{animation:slideDown .25s ease forwards}
+.toast.success{background:#15803d}
+.toast.error{background:#dc2626}
+
+/* HERO */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 1.5rem 3rem;
+  background:linear-gradient(160deg,var(--surface) 0%,var(--blue-50) 50%,var(--surface) 100%);
+  text-align:center;position:relative;overflow:hidden;transition:background .25s;
+}
+.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.05) 0%,transparent 70%);pointer-events:none}
+
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-50);border:1px solid var(--blue-200);color:var(--blue-600);font-size:.73rem;font-weight:600;padding:4px 13px;border-radius:100px;margin-bottom:1.5rem}
+.hero-badge span{width:6px;height:6px;border-radius:50%;background:var(--blue-500);animation:pulse 2s infinite}
+h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:700;line-height:1.2;color:var(--text);margin-bottom:1rem;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--blue-600)}
+.hero-sub{font-size:.93rem;color:var(--text2);max-width:460px;line-height:1.7;margin-bottom:2.5rem}
+
+/* CARD */
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:2rem;box-shadow:var(--card-shadow);
+  width:100%;max-width:600px;position:relative;z-index:1;
+  transition:background .25s,border-color .25s;
+}
+.input-wrap{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.input-row{flex:1;min-width:0;position:relative;display:flex}
+.input-url{
+  width:100%;
+  font-family:'JetBrains Mono',monospace;font-size:.82rem;
+  padding:11px 36px 11px 14px;border:1.5px solid var(--border);border-radius:10px;
+  outline:none;background:var(--input-bg);color:var(--text);transition:all .2s;
+}
+.input-url:focus{border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(59,130,246,.12);background:var(--surface)}
+.input-url::placeholder{color:var(--text3)}
+.btn-clear{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--text3);
+  display:none;align-items:center;padding:2px;border-radius:4px;transition:color .15s;
+}
+.btn-clear:hover{color:var(--text2)}
+.btn-clear.visible{display:flex}
+
+.btn-bypass{
+  padding:11px 20px;background:var(--blue-600);color:#fff;border:none;border-radius:10px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.87rem;cursor:pointer;
+  transition:all .15s;white-space:nowrap;box-shadow:0 2px 8px rgba(37,99,235,.25);
+  display:flex;align-items:center;gap:6px;
+}
+.btn-bypass:hover{background:var(--blue-700);box-shadow:0 4px 16px rgba(37,99,235,.35)}
+.btn-bypass:active{transform:scale(.98)}
+.btn-bypass:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+.detect-row{display:flex;align-items:center;gap:7px;font-size:.76rem;color:var(--text3);font-family:'JetBrains Mono',monospace;min-height:22px}
+.detect-label{padding:2px 9px;border-radius:100px;font-size:.68rem;font-weight:600;background:var(--blue-50);color:var(--blue-600);border:1px solid var(--blue-200)}
+.detect-label.unknown{background:var(--border2);color:var(--text3);border-color:var(--border2)}
+.detect-label.ok{background:#ecfdf5;color:#059669;border-color:#a7f3d0}
+.detect-label.err{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+
+.result-box{margin-top:1rem;background:var(--blue-50);border:1.5px solid var(--border);border-radius:12px;padding:1rem 1.2rem;display:none;animation:slideUp .2s ease}
+.result-box.visible{display:block}
+.result-label{font-size:.66rem;font-weight:700;color:var(--blue-500);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.result-url{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--text);word-break:break-all;line-height:1.6}
+.result-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.btn-sm{
+  padding:6px 13px;border-radius:7px;font-size:.74rem;font-weight:600;
+  cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;
+  transition:all .15s;display:flex;align-items:center;gap:5px;
+}
+.btn-copy{background:var(--blue-600);color:#fff}
+.btn-copy:hover{background:var(--blue-700)}
+.btn-open{background:var(--surface);color:var(--blue-600);border:1.5px solid var(--border)}
+.btn-open:hover{border-color:var(--blue-500)}
+
+.loader{display:none;align-items:center;gap:8px;font-size:.78rem;color:var(--text3);margin-top:8px}
+.loader.visible{display:flex}
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);border-top-color:var(--blue-500);animation:spin .7s linear infinite}
+
+/* SUPPORTED */
+.section{padding:5rem 1.5rem}
+.section-inner{max-width:860px;margin:0 auto}
+.section-title{font-size:1.35rem;font-weight:700;color:var(--text);margin-bottom:.35rem;letter-spacing:-.01em}
+.section-sub{font-size:.85rem;color:var(--text3);margin-bottom:2rem}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.875rem}
+.svc-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.3rem;transition:all .2s}
+.svc-card:hover{box-shadow:0 6px 20px rgba(59,130,246,.1);transform:translateY(-2px)}
+.svc-name{font-weight:600;font-size:.85rem;color:var(--text);margin-bottom:3px}
+.svc-dom{font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--text3)}
+
+footer{text-align:center;padding:2rem;border-top:1px solid var(--border);font-size:.76rem;color:var(--text3)}
+footer a{color:var(--blue-500);text-decoration:none}
+
+@media(max-width:600px){
+  nav{padding:0 1rem}
+  .nav-links{display:none}
+  .input-wrap{flex-direction:column}
+  .btn-bypass{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<nav>
+  <a class="nav-brand" href="#"><div class="dot"></div>BypassURL</a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="#supported">Supported</a>
+      <a href="/status">Status</a>
+    </div>
+    <button class="nav-btn" onclick="toggleDark()" id="themeBtn" title="Toggle dark mode">
+      <svg id="iconSun" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <svg id="iconMoon" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+    <a class="nav-btn docs" href="/docs">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Docs
+    </a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge"><span></span> Powered by bypass.tools</div>
+  <h1 data-aos="fade-up" data-aos-duration="600">Skip iklan,<br><em>langsung ke konten</em></h1>
+  <p class="hero-sub" data-aos="fade-up" data-aos-delay="100" data-aos-duration="600">
+    Paste link Linkvertise, LootLabs, atau layanan serupa — bypass langsung ke URL tujuan.
+  </p>
+
+  <div class="card" data-aos="fade-up" data-aos-delay="200" data-aos-duration="600">
+    <div class="input-wrap">
+      <div class="input-row">
+        <input class="input-url" id="urlInput" type="url" placeholder="https://linkvertise.com/..." autocomplete="off" spellcheck="false"/>
+        <button class="btn-clear" id="btnClear" onclick="clearInput()" title="Clear">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <button class="btn-bypass" id="btnBypass" onclick="runBypass()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        Bypass
+      </button>
+    </div>
+
+    <div class="detect-row">
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="detect-label unknown" id="detectBadge">—</span>
+      <span id="detectText"></span>
+    </div>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <span>Memproses...</span>
+    </div>
+
+    <div class="result-box" id="resultBox">
+      <div class="result-label">URL Hasil</div>
+      <div class="result-url" id="resultUrl"></div>
+      <div class="result-actions">
+        <button class="btn-sm btn-copy" id="btnCopy" onclick="copyResult()">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Salin
+        </button>
+        <button class="btn-sm btn-open" onclick="openResult()">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Buka
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="supported">
+  <div class="section-inner">
+    <h2 class="section-title" data-aos="fade-up">Layanan yang Didukung</h2>
+    <p class="section-sub" data-aos="fade-up" data-aos-delay="40">Shortener & ad-locker yang bisa dibypass</p>
+    <div class="grid-3">
+      <div class="svc-card" data-aos="fade-up" data-aos-delay="0"><div class="svc-name">LootLabs</div><div class="svc-dom">links.lootlabs.gg</div></div>
+      <div class="svc-card" data-aos="fade-up" data-aos-delay="40"><div class="svc-name">Linkvertise</div><div class="svc-dom">linkvertise.com</div></div>
+      <div class="svc-card" data-aos="fade-up" data-aos-delay="80"><div class="svc-name">Shorte.st</div><div class="svc-dom">shorte.st</div></div>
+      <div class="svc-card" data-aos="fade-up" data-aos-delay="120"><div class="svc-name">Rekonise</div><div class="svc-dom">rekonise.com</div></div>
+      <div class="svc-card" data-aos="fade-up" data-aos-delay="160"><div class="svc-name">Work.ink</div><div class="svc-dom">work.ink</div></div>
+      <div class="svc-card" data-aos="fade-up" data-aos-delay="200"><div class="svc-name">& Lainnya</div><div class="svc-dom">via bypass.tools</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>BypassURL &nbsp;·&nbsp; <a href="/docs">Docs</a> &nbsp;·&nbsp; <a href="/status">Status</a> &nbsp;·&nbsp; by <a href="https://github.com/fidzzcodex" target="_blank">fidzzcodex</a></p>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+AOS.init({ once: true, offset: 60 });
+
+// DARK MODE
+const html = document.documentElement;
+const saved = localStorage.getItem('theme') || 'light';
+html.setAttribute('data-theme', saved);
+updateThemeIcon(saved);
+
+function toggleDark() {
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeIcon(next);
+}
+function updateThemeIcon(t) {
+  document.getElementById('iconSun').style.display = t === 'dark' ? 'none' : 'block';
+  document.getElementById('iconMoon').style.display = t === 'dark' ? 'block' : 'none';
+}
+
+// TOAST
+function toast(msg, type = '') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">${
+    type === 'success' ? '<polyline points="20 6 9 17 4 12"/>' :
+    type === 'error' ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' :
+    '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>'
+  }</svg>${msg}`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 250); }, 2500);
+}
+
+// DETECT
+const SERVICES = [
+  { name: "LootLabs", domains: ["links.lootlabs.gg","lootdest.org"] },
+  { name: "Linkvertise", domains: ["linkvertise.com","linkvertise.net"] },
+  { name: "Shorte.st", domains: ["shorte.st","sh.st"] },
+  { name: "Rekonise", domains: ["rekonise.com"] },
+  { name: "Work.ink", domains: ["work.ink"] },
+  { name: "Boost.ink", domains: ["boost.ink"] },
+];
+const detectSvc = url => {
+  try {
+    const host = new URL(url).hostname.replace('www.','');
+    for (const s of SERVICES)
+      if (s.domains.some(d => host === d || host.endsWith('.'+d))) return s.name;
+  } catch {}
+  return null;
+};
+
+const urlInput = document.getElementById('urlInput');
+const btnClear = document.getElementById('btnClear');
+urlInput.addEventListener('input', e => {
+  const val = e.target.value.trim();
+  btnClear.classList.toggle('visible', val.length > 0);
+  const badge = document.getElementById('detectBadge');
+  const txt = document.getElementById('detectText');
+  if (!val) { badge.className='detect-label unknown'; badge.textContent='—'; txt.textContent=''; return; }
+  const svc = detectSvc(val);
+  if (svc) { badge.className='detect-label ok'; badge.textContent=svc; txt.textContent='— siap dibypass'; }
+  else { badge.className='detect-label unknown'; badge.textContent='Tidak dikenal'; txt.textContent=''; }
+});
+
+function clearInput() {
+  urlInput.value = '';
+  btnClear.classList.remove('visible');
+  document.getElementById('detectBadge').className = 'detect-label unknown';
+  document.getElementById('detectBadge').textContent = '—';
+  document.getElementById('detectText').textContent = '';
+  document.getElementById('resultBox').classList.remove('visible');
+  urlInput.focus();
+}
+
+let lastResult = '';
+async function runBypass() {
+  const url = urlInput.value.trim();
+  if (!url) { toast('Masukkan URL dulu', 'error'); return; }
+  const btn = document.getElementById('btnBypass');
+  const loader = document.getElementById('loader');
+  const resultBox = document.getElementById('resultBox');
+  const badge = document.getElementById('detectBadge');
+
+  btn.disabled = true;
+  loader.classList.add('visible');
+  resultBox.classList.remove('visible');
+  document.getElementById('detectText').textContent = '';
+
+  try {
+    const res = await fetch('/api/bypass', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.result) throw new Error(data.error || 'Bypass gagal');
+    lastResult = data.result;
+    document.getElementById('resultUrl').textContent = data.result;
+    resultBox.classList.add('visible');
+    badge.className = 'detect-label ok';
+    badge.textContent = 'Berhasil';
+    toast('Bypass berhasil', 'success');
+  } catch (err) {
+    badge.className = 'detect-label err';
+    badge.textContent = 'Gagal';
+    document.getElementById('detectText').textContent = '— ' + err.message;
+    toast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    loader.classList.remove('visible');
+  }
+}
+
+urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') runBypass(); });
+
+function copyResult() {
+  if (!lastResult) return;
+  navigator.clipboard.writeText(lastResult).then(() => {
+    toast('URL disalin ke clipboard', 'success');
+  });
+}
+function openResult() { if (lastResult) window.open(lastResult, '_blank'); }
+</script>
+</body>
+</html>
